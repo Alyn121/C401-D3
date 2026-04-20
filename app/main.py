@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import asyncio
 import os
 
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from structlog.contextvars import bind_contextvars
@@ -10,7 +12,7 @@ from structlog.contextvars import bind_contextvars
 from .agent import LabAgent
 from .incidents import disable, enable, status
 from .logging_config import configure_logging, get_logger
-from .metrics import record_error, snapshot
+from .metrics import get_history, push_history, record_error, snapshot
 from .middleware import CorrelationIdMiddleware
 from .pii import hash_user_id, summarize_text
 from .schemas import ChatRequest, ChatResponse
@@ -18,12 +20,27 @@ from .tracing import tracing_enabled, rehydrate_from_logs
 
 configure_logging()
 log = get_logger()
-app = FastAPI(title="Day 13 Observability Lab")
+app = FastAPI(
+    title="AI Gia Sư — Observability Lab",
+    description="Day 13 Lab: Monitoring, Logging & Tracing for AI Tutoring System",
+    version="1.0.0",
+)
+
+# CORS — allow dashboard HTML to poll the API
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.add_middleware(CorrelationIdMiddleware)
 agent = LabAgent()
 
 # Mount thư mục static để phục vụ Dashboard HTML
-app.mount("/static", StaticFiles(directory="static"), name="static")
+import pathlib
+_static_dir = pathlib.Path(__file__).parent.parent / "static"
+_static_dir.mkdir(exist_ok=True)
+app.mount("/static", StaticFiles(directory=str(_static_dir)), name="static")
 
 
 @app.get("/")
@@ -32,18 +49,29 @@ async def index() -> RedirectResponse:
     return RedirectResponse(url="/static/dashboard.html")
 
 
+# ── Background task: push metrics history every 15s ───────────
+async def _history_task() -> None:
+    while True:
+        await asyncio.sleep(15)
+        push_history()
+
+
 @app.on_event("startup")
 async def startup() -> None:
     # Tự động nạp lại metrics từ file log cũ
     rehydrate_from_logs()
+    # Khởi động task đẩy history metrics
+    asyncio.create_task(_history_task())
+    
     log.info(
         "app_started",
-        service=os.getenv("APP_NAME", "day13-observability-lab"),
+        service=os.getenv("APP_NAME", "ai-gia-su-observability-lab"),
         env=os.getenv("APP_ENV", "dev"),
-        payload={"tracing_enabled": tracing_enabled()},
+        payload={"tracing_enabled": tracing_enabled(), "domain": "ai_tutor"},
     )
 
 
+# ── Health & Metrics ──────────────────────────────────────────
 @app.get("/health")
 async def health() -> dict:
     return {"ok": True, "tracing_enabled": tracing_enabled(), "incidents": status()}
@@ -54,10 +82,16 @@ async def metrics() -> dict:
     return snapshot()
 
 
+@app.get("/metrics/history")
+async def metrics_history() -> list:
+    return get_history()
+
+
+# ── Chat endpoint ─────────────────────────────────────────────
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: Request, body: ChatRequest) -> ChatResponse:
     from .incidents import STATE
-    if STATE["api_rate_limit"]:
+    if STATE.get("api_rate_limit"):
         record_error("RateLimitError")
         raise HTTPException(status_code=429, detail="Too many requests. Please try again later.")
 
@@ -75,8 +109,13 @@ async def chat(request: Request, body: ChatRequest) -> ChatResponse:
     log.info(
         "request_received",
         service="api",
-        payload={"message_preview": summarize_text(body.message)},
+        payload={
+            "message_preview": summarize_text(body.message),
+            "subject": body.subject,
+            "grade": body.grade,
+        },
     )
+
     try:
         result = agent.run(
             user_id=body.user_id,
@@ -84,8 +123,9 @@ async def chat(request: Request, body: ChatRequest) -> ChatResponse:
             session_id=body.session_id,
             message=body.message,
             subject=body.subject,
-            grade=body.grade
+            grade=body.grade,
         )
+
         log.info(
             "response_sent",
             service="api",
@@ -95,8 +135,12 @@ async def chat(request: Request, body: ChatRequest) -> ChatResponse:
             cost_usd=result.cost_usd,
             subject=body.subject,
             grade=body.grade,
-            payload={"answer_preview": summarize_text(result.answer)},
+            payload={
+                "answer_preview": summarize_text(result.answer),
+                "quality_score": getattr(result, 'quality_score', 0.0),
+            },
         )
+
         return ChatResponse(
             answer=result.answer,
             correlation_id=request.state.correlation_id,
@@ -104,8 +148,9 @@ async def chat(request: Request, body: ChatRequest) -> ChatResponse:
             tokens_in=result.tokens_in,
             tokens_out=result.tokens_out,
             cost_usd=result.cost_usd,
-            quality_score=result.quality_score,
+            quality_score=getattr(result, 'quality_score', 0.0),
         )
+
     except Exception as exc:  # pragma: no cover
         error_type = type(exc).__name__
         record_error(error_type)
@@ -118,6 +163,7 @@ async def chat(request: Request, body: ChatRequest) -> ChatResponse:
         raise HTTPException(status_code=500, detail=error_type) from exc
 
 
+# ── Incident controls ─────────────────────────────────────────
 @app.post("/incidents/{name}/enable")
 async def enable_incident(name: str) -> JSONResponse:
     try:
