@@ -4,6 +4,9 @@ STATE = {
     "rag_slow": False,
     "tool_fail": False,
     "cost_spike": False,
+    "safety_filter_tripped": False,
+    "low_quality_response": False,
+    "api_rate_limit": False,
 }
 
 

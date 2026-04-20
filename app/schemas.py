@@ -10,6 +10,8 @@ class ChatRequest(BaseModel):
     user_id: str = Field(..., examples=["u_team_01"])
     session_id: str = Field(..., examples=["s_demo_01"])
     feature: str = Field(default="qa", examples=["qa", "summary"])
+    subject: str | None = Field(default=None, examples=["math", "physics"])
+    grade: str | None = Field(default=None, examples=["10", "11", "12"])
     message: str = Field(..., min_length=1)
 
 
@@ -34,6 +36,8 @@ class LogRecord(BaseModel):
     session_id: str | None = None
     feature: str | None = None
     model: str | None = None
+    subject: str | None = None
+    grade: str | None = None
     latency_ms: int | None = None
     tokens_in: int | None = None
     tokens_out: int | None = None

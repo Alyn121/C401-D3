@@ -26,23 +26,34 @@ class LabAgent:
         self.llm = FakeLLM(model=model)
 
     @observe()
-    def run(self, user_id: str, feature: str, session_id: str, message: str) -> AgentResult:
+    def run(self, user_id: str, feature: str, session_id: str, message: str, subject: str | None = None, grade: str | None = None) -> AgentResult:
         started = time.perf_counter()
+        
+        # 1. Retrieval
         docs = retrieve(message)
-        prompt = f"Feature={feature}\nDocs={docs}\nQuestion={message}"
+        
+        # 2. LLM Generation
+        prompt = f"Subject={subject}\nGrade={grade}\nFeature={feature}\nDocs={docs}\nQuestion={message}"
         response = self.llm.generate(prompt)
+        
+        # 3. Quality Scoring
         quality_score = self._heuristic_quality(message, response.text, docs)
+        
         latency_ms = int((time.perf_counter() - started) * 1000)
         cost_usd = self._estimate_cost(response.usage.input_tokens, response.usage.output_tokens)
 
-        langfuse_context.update_current_trace(
-            user_id=hash_user_id(user_id),
+        # 4. Tracing Enrichment (Centralized)
+        from .tracing import enrich_trace
+        enrich_trace(
+            user_id=user_id,
             session_id=session_id,
-            tags=["lab", feature, self.model],
-        )
-        langfuse_context.update_current_observation(
-            metadata={"doc_count": len(docs), "query_preview": summarize_text(message)},
-            usage_details={"input": response.usage.input_tokens, "output": response.usage.output_tokens},
+            feature=feature,
+            model=self.model,
+            message=message,
+            docs=docs,
+            usage={"input": response.usage.input_tokens, "output": response.usage.output_tokens},
+            subject=subject,
+            grade=grade
         )
 
         metrics.record_request(

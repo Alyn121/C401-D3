@@ -3,7 +3,8 @@ from __future__ import annotations
 import os
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from structlog.contextvars import bind_contextvars
 
 from .agent import LabAgent
@@ -13,7 +14,7 @@ from .metrics import record_error, snapshot
 from .middleware import CorrelationIdMiddleware
 from .pii import hash_user_id, summarize_text
 from .schemas import ChatRequest, ChatResponse
-from .tracing import tracing_enabled
+from .tracing import tracing_enabled, rehydrate_from_logs
 
 configure_logging()
 log = get_logger()
@@ -21,9 +22,20 @@ app = FastAPI(title="Day 13 Observability Lab")
 app.add_middleware(CorrelationIdMiddleware)
 agent = LabAgent()
 
+# Mount thư mục static để phục vụ Dashboard HTML
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+@app.get("/")
+async def index() -> RedirectResponse:
+    # Điều hướng trang chủ về Dashboard mặc định
+    return RedirectResponse(url="/static/dashboard.html")
+
 
 @app.on_event("startup")
 async def startup() -> None:
+    # Tự động nạp lại metrics từ file log cũ
+    rehydrate_from_logs()
     log.info(
         "app_started",
         service=os.getenv("APP_NAME", "day13-observability-lab"),
@@ -44,8 +56,21 @@ async def metrics() -> dict:
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: Request, body: ChatRequest) -> ChatResponse:
-    # TODO: Enrich logs with request context (user_id_hash, session_id, feature, model, env)
-    # bind_contextvars(...)
+    from .incidents import STATE
+    if STATE["api_rate_limit"]:
+        record_error("RateLimitError")
+        raise HTTPException(status_code=429, detail="Too many requests. Please try again later.")
+
+    # 1. Ràng buộc các thông tin ngữ cảnh vào log tự động
+    bind_contextvars(
+        user_id_hash=hash_user_id(body.user_id),
+        session_id=body.session_id,
+        feature=body.feature,
+        model=agent.model,
+        subject=body.subject,
+        grade=body.grade,
+        env=os.getenv("APP_ENV", "dev"),
+    )
     
     log.info(
         "request_received",
@@ -58,6 +83,8 @@ async def chat(request: Request, body: ChatRequest) -> ChatResponse:
             feature=body.feature,
             session_id=body.session_id,
             message=body.message,
+            subject=body.subject,
+            grade=body.grade
         )
         log.info(
             "response_sent",
@@ -66,6 +93,8 @@ async def chat(request: Request, body: ChatRequest) -> ChatResponse:
             tokens_in=result.tokens_in,
             tokens_out=result.tokens_out,
             cost_usd=result.cost_usd,
+            subject=body.subject,
+            grade=body.grade,
             payload={"answer_preview": summarize_text(result.answer)},
         )
         return ChatResponse(

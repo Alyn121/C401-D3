@@ -9,10 +9,9 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from structlog.contextvars import bind_contextvars, clear_contextvars
 
-# ── Rate Limiter config ────────────────────────────────────────
 # Max N requests per session_id trong cửa sổ thời gian T giây
-RATE_LIMIT_MAX    = 20    # tối đa 20 requests
-RATE_LIMIT_WINDOW = 60    # trong 60 giây
+RATE_LIMIT_MAX    = 2000    # tối đa 2000 requests (đã nâng cấp để test tải)
+RATE_LIMIT_WINDOW = 60      # trong 60 giây
 _rate_buckets: dict[str, deque] = defaultdict(deque)
 
 # ── Request size guard ─────────────────────────────────────────
