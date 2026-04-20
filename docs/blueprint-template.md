@@ -81,6 +81,10 @@ d87814361e1cfaf7bedf575725f87a85c42ebd59  4064e5649b55d26f5cf38ecabe81cc0522a077
    eebde5086df6c279a230addbc90f10640b2f95b7
 ### [Lưu Quang Lực_2A202600121, Đinh Văn Thư_2A202600035]
 - [TASKS_COMPLETED]: Tracing & Enrichment
+Cấu trúc phân tầng: Trace vs. Observation
+Hệ thống theo dõi ở đây chia làm 2 tầng dữ liệu:
+- Trace (Dấu vết tổng thể): Đại diện cho toàn bộ một lượt tương tác của người dùng. Nó lưu giữ các thông tin "vĩ mô" cố định như: Session ID, AI Model nào đang chạy, môi trường (dev hay prod), và môn học.
+- Observation (Quan sát chi tiết): Đại diện cho một bước cụ thể bên trong lượt tương tác đó. Ví dụ: bước tìm kiếm tài liệu (Retrieval). Nó lưu các thông tin "vi mô" như: Số lượng tài liệu tìm thấy, nội dung tóm tắt của câu hỏi.
 - [EVIDENCE_LINK]:  16aa1fb65665610084641de02a83180f8bc810dd   d42a29b84ef5357f6826dbddae1a2341d59754e7
 47643b4becd787cc850875486b541c4866f28ebb
 ###  Nguyễn Phương Nam _ 2A202600194]
