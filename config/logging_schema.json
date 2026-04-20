@@ -3,22 +3,47 @@
   "type": "object",
   "required": ["ts", "level", "service", "event", "correlation_id"],
   "properties": {
-    "ts": {"type": "string"},
-    "level": {"type": "string"},
-    "service": {"type": "string"},
-    "event": {"type": "string"},
-    "correlation_id": {"type": "string"},
-    "env": {"type": ["string", "null"]},
-    "user_id_hash": {"type": ["string", "null"]},
-    "session_id": {"type": ["string", "null"]},
-    "feature": {"type": ["string", "null"]},
-    "model": {"type": ["string", "null"]},
-    "latency_ms": {"type": ["integer", "null"]},
-    "tokens_in": {"type": ["integer", "null"]},
-    "tokens_out": {"type": ["integer", "null"]},
-    "cost_usd": {"type": ["number", "null"]},
-    "error_type": {"type": ["string", "null"]},
-    "tool_name": {"type": ["string", "null"]},
-    "payload": {"type": ["object", "null"]}
+    "ts":             { "type": "string" },
+    "level":          { "type": "string", "enum": ["info", "warning", "error", "critical"] },
+    "service":        { "type": "string", "enum": ["api", "rag", "llm", "security", "control"] },
+    "event":          { "type": "string", "enum": [
+                          "app_started",
+                          "request_received",
+                          "retrieval_step",
+                          "inference_step",
+                          "pii_scrubbed",
+                          "response_sent",
+                          "request_failed",
+                          "incident_enabled",
+                          "incident_disabled"
+                        ]},
+    "correlation_id": { "type": "string" },
+
+    "env":            { "type": ["string", "null"] },
+    "user_id_hash":   { "type": ["string", "null"] },
+    "session_id":     { "type": ["string", "null"] },
+
+    "feature":        { "type": ["string", "null"],
+                        "enum": ["solve_exercise", "explain_concept",
+                                 "generate_quiz", "grade_essay",
+                                 "qa", "summary", null] },
+    "subject":        { "type": ["string", "null"],
+                        "enum": ["math", "literature", "physics",
+                                 "chemistry", "english", "history",
+                                 "general", null] },
+    "grade":          { "type": ["string", "null"] },
+
+    "model":          { "type": ["string", "null"] },
+    "latency_ms":     { "type": ["integer", "null"] },
+    "tokens_in":      { "type": ["integer", "null"] },
+    "tokens_out":     { "type": ["integer", "null"] },
+    "cost_usd":       { "type": ["number", "null"] },
+
+    "quality_score":  { "type": ["number", "null"], "minimum": 0.0, "maximum": 1.0 },
+    "steps_count":    { "type": ["integer", "null"] },
+
+    "error_type":     { "type": ["string", "null"] },
+    "tool_name":      { "type": ["string", "null"] },
+    "payload":        { "type": ["object", "null"] }
   }
 }

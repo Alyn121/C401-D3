@@ -1,3 +1,6 @@
-{"question":"What is your refund policy?","must_include":["7 days","proof of purchase"]}
-{"question":"Explain why metrics traces and logs work together","must_include":["metrics","traces","logs"]}
-{"question":"What should not appear in app logs?","must_include":["PII","sensitive"]}
+{"question":"Giải phương trình bậc 2: x² - 5x + 6 = 0","must_include":["delta","nghiệm","bước"]}
+{"question":"Giải thích khái niệm đạo hàm","must_include":["đạo hàm","công thức","ví dụ"]}
+{"question":"Phân tích nhân vật Chí Phèo","must_include":["Nam Cao","bi kịch","nhân vật"]}
+{"question":"Tính lực tác dụng theo định luật Newton II","must_include":["F","m","a"]}
+{"question":"Giải thích phản ứng oxi hóa khử","must_include":["electron","chất khử","chất oxi hóa"]}
+{"question":"Ý nghĩa lịch sử của Chiến dịch Điện Biên Phủ","must_include":["1954","kháng chiến","thực dân Pháp"]}

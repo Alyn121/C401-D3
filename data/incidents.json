@@ -1,5 +1,5 @@
 {
-  "rag_slow": "Retrieval latency spike. Students should find slow RAG span in trace.",
-  "tool_fail": "Vector store or tool error. Students should identify error_type from logs.",
-  "cost_spike": "Token usage spike. Students should explain higher output token cost."
+  "rag_slow": "Retrieval latency spike trên Knowledge Base môn học. Học sinh thấy phản hồi chậm >3s. Sinh viên cần tìm span RAG chậm trong trace và so sánh với LLM span.",
+  "tool_fail": "Knowledge Base (curriculum_retriever) bị lỗi timeout. AI không thể truy xuất tài liệu sách giáo khoa. Sinh viên cần xác định error_type=RuntimeError từ logs và đề xuất fallback.",
+  "cost_spike": "Token usage của LLM tăng đột biến — tokens_out gấp 4 lần bình thường. Có thể do học sinh spam câu hỏi dài hoặc generate_quiz tạo bài tập quá lớn. Sinh viên cần phân tích traces theo feature và model."
 }

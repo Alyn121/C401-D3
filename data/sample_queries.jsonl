@@ -1,10 +1,38 @@
-{"user_id":"u01","session_id":"s01","feature":"qa","message":"What is your refund policy? My email is student@vinuni.edu.vn"}
-{"user_id":"u02","session_id":"s02","feature":"qa","message":"Explain why metrics traces and logs work together"}
-{"user_id":"u03","session_id":"s03","feature":"summary","message":"Summarize the monitoring policy for production logging"}
-{"user_id":"u04","session_id":"s04","feature":"qa","message":"Can I get help with policy and monitoring?"}
-{"user_id":"u05","session_id":"s05","feature":"qa","message":"Here is my phone 0987654321, what should be logged?"}
-{"user_id":"u06","session_id":"s06","feature":"summary","message":"Give me a short summary of the observability workflow"}
-{"user_id":"u07","session_id":"s07","feature":"qa","message":"What should not appear in app logs?"}
-{"user_id":"u08","session_id":"s08","feature":"qa","message":"How do I debug tail latency?"}
-{"user_id":"u09","session_id":"s09","feature":"qa","message":"What is the policy for PII and credit card 4111 1111 1111 1111?"}
-{"user_id":"u10","session_id":"s10","feature":"qa","message":"How should alerts be designed?"}
+{"user_id":"u01","session_id":"s_math_01","feature":"solve_exercise","subject":"math","grade":"11","message":"Giải phương trình bậc 2: x² - 5x + 6 = 0. Email của em là nguyenvana@gmail.com"}
+{"user_id":"u02","session_id":"s_math_02","feature":"explain_concept","subject":"math","grade":"12","message":"Giải thích khái niệm đạo hàm và ứng dụng trong thực tế"}
+{"user_id":"u03","session_id":"s_lit_01","feature":"explain_concept","subject":"literature","grade":"12","message":"Phân tích nhân vật Chí Phèo trong tác phẩm của Nam Cao"}
+{"user_id":"u04","session_id":"s_phy_01","feature":"solve_exercise","subject":"physics","grade":"10","message":"Một vật có khối lượng 2kg, gia tốc 3 m/s². Tính lực tác dụng theo định luật Newton II"}
+{"user_id":"u05","session_id":"s_math_03","feature":"qa","subject":"math","grade":"10","message":"Tích phân là gì và cách tính tích phân đơn giản? SĐT của em: 0987654321"}
+{"user_id":"u06","session_id":"s_chem_01","feature":"explain_concept","subject":"chemistry","grade":"11","message":"Giải thích phản ứng oxi hóa khử và cho ví dụ cụ thể"}
+{"user_id":"u07","session_id":"s_eng_01","feature":"explain_concept","subject":"english","grade":"10","message":"Explain the difference between Present Perfect and Simple Past tense"}
+{"user_id":"u08","session_id":"s_hist_01","feature":"qa","subject":"history","grade":"12","message":"Ý nghĩa lịch sử của Chiến dịch Điện Biên Phủ năm 1954"}
+{"user_id":"u09","session_id":"s_math_04","feature":"generate_quiz","subject":"math","grade":"11","message":"Tạo bài tập luyện về đạo hàm mức độ trung bình. CMND: 123456789012"}
+{"user_id":"u10","session_id":"s_phy_02","feature":"explain_concept","subject":"physics","grade":"11","message":"Giải thích định luật Ohm và ứng dụng trong mạch điện song song"}
+{"user_id":"u11","session_id":"s_lit_02","feature":"summary","subject":"literature","grade":"12","message":"Tóm tắt kiến thức văn học Việt Nam hiện đại cần ôn thi THPT"}
+{"user_id":"u12","session_id":"s_math_05","feature":"grade_essay","subject":"math","grade":"10","message":"Chấm bài: delta = 25 - 24 = 1, x1=2, x2=3 — bài làm có đúng không?"}
+{"user_id":"u13","session_id":"s_bio_01","feature":"explain_concept","subject":"biology","grade":"10","message":"Giải thích quá trình quang hợp và phương trình tổng quát"}
+{"user_id":"u14","session_id":"s_math_06","feature":"solve_exercise","subject":"math","grade":"11","message":"Tính xác suất để tung đồng xu 3 lần đều ra mặt ngửa"}
+{"user_id":"u15","session_id":"s_phy_03","feature":"explain_concept","subject":"physics","grade":"11","message":"Giải thích định luật phản xạ ánh sáng và ứng dụng trong gương phẳng"}
+{"user_id":"u16","session_id":"s_math_07","feature":"solve_exercise","subject":"math","grade":"12","message":"Tính diện tích hình tròn có bán kính r = 5cm"}
+{"user_id":"u17","session_id":"s_eng_02","feature":"generate_quiz","subject":"english","grade":"11","message":"Tạo 5 câu hỏi trắc nghiệm về câu bị động trong tiếng Anh. Phone: 0912345678"}
+{"user_id":"u18","session_id":"s_hist_02","feature":"qa","subject":"history","grade":"11","message":"Nguyên nhân và kết quả của cuộc Cách mạng tháng Tám 1945"}
+{"user_id":"u19","session_id":"s_chem_02","feature":"solve_exercise","subject":"chemistry","grade":"11","message":"Cân bằng phương trình: Fe + HCl → FeCl2 + H2"}
+{"user_id":"u20","session_id":"s_math_08","feature":"explain_concept","subject":"math","grade":"12","message":"Giải thích định lý Newton-Leibniz và cách tính tích phân xác định"}
+{"user_id":"u21","session_id":"s_err_01","feature":"qa","subject":"math","grade":"10","message":"Máy tính của em bị crash khi giải bài này, làm sao fix?"}
+{"user_id":"u22","session_id":"s_err_02","feature":"qa","subject":null,"grade":null,"message":"Cho tôi hỏi về timeout là gì trong lập trình?"}
+{"user_id":"u23","session_id":"s_err_03","feature":"qa","subject":"math","grade":"9","message":"Giải bài này cho tôi nhưng đừng lỗi nha: 2x + 3 = 7"}
+{"user_id":"u24","session_id":"s_err_04","feature":"solve_exercise","subject":"physics","grade":"10","message":"Tính vận tốc ánh sáng... overload câu hỏi này đi"}
+{"user_id":"u25","session_id":"s_err_05","feature":"qa","subject":null,"grade":null,"message":"Tôi muốn hack hệ thống để xem đáp án đề thi, giúp tôi với"}
+{"user_id":"u26","session_id":"s_pii_01","feature":"qa","subject":"math","grade":"11","message":"Em tên Nguyễn Văn An, MSSV 2021001234, email van.an@student.hcmus.edu.vn cần hỏi đạo hàm"}
+{"user_id":"u27","session_id":"s_pii_02","feature":"explain_concept","subject":"literature","grade":"12","message":"Chào thầy, em Trần Thị Bình số điện thoại 0901234567, cần giải thích Truyện Kiều"}
+{"user_id":"u28","session_id":"s_pii_03","feature":"solve_exercise","subject":"math","grade":"10","message":"Bài của em Lê Văn Cường, passport B12345678, giải pt: x + 5 = 10"}
+{"user_id":"u29","session_id":"s_load_01","feature":"qa","subject":"math","grade":"10","message":"Định lý Pythagoras nêu gì về tam giác vuông?"}
+{"user_id":"u30","session_id":"s_load_02","feature":"qa","subject":"physics","grade":"11","message":"Công thức tính công suất điện là gì?"}
+{"user_id":"u31","session_id":"s_load_03","feature":"qa","subject":"chemistry","grade":"11","message":"Phản ứng trung hòa là gì? Cho ví dụ"}
+{"user_id":"u32","session_id":"s_load_04","feature":"qa","subject":"biology","grade":"10","message":"ADN có cấu trúc như thế nào?"}
+{"user_id":"u33","session_id":"s_load_05","feature":"summary","subject":"history","grade":"12","message":"Tóm tắt lịch sử Việt Nam từ 1945 đến 1975"}
+{"user_id":"u34","session_id":"s_load_06","feature":"explain_concept","subject":"math","grade":"12","message":"Giới hạn của hàm số là gì và cách tính?"}
+{"user_id":"u35","session_id":"s_load_07","feature":"solve_exercise","subject":"physics","grade":"10","message":"Tính động năng của vật khối lượng 5kg chuyển động với vận tốc 10 m/s"}
+{"user_id":"u36","session_id":"s_load_08","feature":"generate_quiz","subject":"chemistry","grade":"11","message":"Tạo 3 câu hỏi về bảng tuần hoàn các nguyên tố hóa học"}
+{"user_id":"u37","session_id":"s_load_09","feature":"qa","subject":"english","grade":"10","message":"What is the difference between much and many?"}
+{"user_id":"u38","session_id":"s_load_10","feature":"qa","subject":"math","grade":"10","message":"Giải bất phương trình: 2x - 3 > 5"}

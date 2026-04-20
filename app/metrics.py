@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-from collections import Counter
+import time
+from collections import Counter, deque
 from statistics import mean
+from typing import TypedDict
 
 REQUEST_LATENCIES: list[int] = []
 REQUEST_COSTS: list[float] = []
@@ -10,6 +12,25 @@ REQUEST_TOKENS_OUT: list[int] = []
 ERRORS: Counter[str] = Counter()
 TRAFFIC: int = 0
 QUALITY_SCORES: list[float] = []
+
+# Time-series history — last 60 data points (1 per snapshot call)
+MAX_HISTORY = 60
+
+class HistoryPoint(TypedDict):
+    ts: float
+    latency_p50: float
+    latency_p95: float
+    latency_p99: float
+    traffic: int
+    error_rate_pct: float
+    total_cost_usd: float
+    tokens_in: int
+    tokens_out: int
+    quality_avg: float
+
+HISTORY: deque[HistoryPoint] = deque(maxlen=MAX_HISTORY)
+_last_traffic_snapshot: int = 0
+_last_errors_snapshot: int = 0
 
 
 def record_request(latency_ms: int, cost_usd: float, tokens_in: int, tokens_out: int, quality_score: float) -> None:
@@ -22,10 +43,8 @@ def record_request(latency_ms: int, cost_usd: float, tokens_in: int, tokens_out:
     QUALITY_SCORES.append(quality_score)
 
 
-
 def record_error(error_type: str) -> None:
     ERRORS[error_type] += 1
-
 
 
 def percentile(values: list[int], p: int) -> float:
@@ -36,6 +55,13 @@ def percentile(values: list[int], p: int) -> float:
     return float(items[idx])
 
 
+def _error_rate() -> float:
+    total = TRAFFIC
+    total_errors = sum(ERRORS.values())
+    if total == 0:
+        return 0.0
+    return round((total_errors / total) * 100, 2)
+
 
 def snapshot() -> dict:
     return {
@@ -43,10 +69,32 @@ def snapshot() -> dict:
         "latency_p50": percentile(REQUEST_LATENCIES, 50),
         "latency_p95": percentile(REQUEST_LATENCIES, 95),
         "latency_p99": percentile(REQUEST_LATENCIES, 99),
-        "avg_cost_usd": round(mean(REQUEST_COSTS), 4) if REQUEST_COSTS else 0.0,
-        "total_cost_usd": round(sum(REQUEST_COSTS), 4),
+        "avg_cost_usd": round(mean(REQUEST_COSTS), 6) if REQUEST_COSTS else 0.0,
+        "total_cost_usd": round(sum(REQUEST_COSTS), 6),
         "tokens_in_total": sum(REQUEST_TOKENS_IN),
         "tokens_out_total": sum(REQUEST_TOKENS_OUT),
         "error_breakdown": dict(ERRORS),
+        "error_rate_pct": _error_rate(),
         "quality_avg": round(mean(QUALITY_SCORES), 4) if QUALITY_SCORES else 0.0,
     }
+
+
+def push_history() -> None:
+    """Call this periodically (e.g., every 15s) to store a time-series point."""
+    s = snapshot()
+    HISTORY.append(HistoryPoint(
+        ts=time.time(),
+        latency_p50=s["latency_p50"],
+        latency_p95=s["latency_p95"],
+        latency_p99=s["latency_p99"],
+        traffic=s["traffic"],
+        error_rate_pct=s["error_rate_pct"],
+        total_cost_usd=s["total_cost_usd"],
+        tokens_in=s["tokens_in_total"],
+        tokens_out=s["tokens_out_total"],
+        quality_avg=s["quality_avg"],
+    ))
+
+
+def get_history() -> list[HistoryPoint]:
+    return list(HISTORY)

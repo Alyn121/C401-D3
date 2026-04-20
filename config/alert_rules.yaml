@@ -1,19 +1,70 @@
 alerts:
+  # ── Latency Alerts ──────────────────────────────────────────
   - name: high_latency_p95
     severity: P2
-    condition: latency_p95_ms > 5000 for 30m
+    condition: latency_p95_ms > 3000 for 15m
     type: symptom-based
     owner: team-oncall
     runbook: docs/alerts.md#1-high-latency-p95
+    note: "Học sinh chờ > 3s — kiểm tra RAG span vs LLM span"
+
+  - name: rag_latency_spike
+    severity: P2
+    condition: rag_latency_ms_p95 > 500 for 10m
+    type: symptom-based
+    owner: team-oncall
+    runbook: docs/alerts.md#1-high-latency-p95
+    note: "RAG retrieval chậm — kiểm tra incident rag_slow"
+
+  # ── Error Rate Alerts ────────────────────────────────────────
   - name: high_error_rate
     severity: P1
     condition: error_rate_pct > 5 for 5m
     type: symptom-based
     owner: team-oncall
     runbook: docs/alerts.md#2-high-error-rate
+    note: "Phân loại theo error_type: tool_fail vs LLM vs schema"
+
+  - name: knowledge_base_failure
+    severity: P1
+    condition: error_type=RuntimeError count > 3 for 2m
+    type: cause-based
+    owner: team-oncall
+    runbook: docs/alerts.md#2-high-error-rate
+    note: "Vector store / KB timeout — kiểm tra incident tool_fail"
+
+  # ── Cost Alerts ──────────────────────────────────────────────
   - name: cost_budget_spike
     severity: P2
     condition: hourly_cost_usd > 2x_baseline for 15m
     type: symptom-based
     owner: finops-owner
     runbook: docs/alerts.md#3-cost-budget-spike
+    note: "Kiểm tra tokens_out spike — có thể học sinh đang spam"
+
+  # ── Quality Alerts (AI Tutor specific) ──────────────────────
+  - name: low_answer_quality
+    severity: P3
+    condition: quality_score_avg < 0.6 for 30m
+    type: symptom-based
+    owner: team-oncall
+    runbook: docs/alerts.md#2-high-error-rate
+    note: "AI đang trả lời sai — kiểm tra RAG corpus và LLM output"
+
+  # ── Security Alerts ──────────────────────────────────────────
+  - name: pii_scrubbing_inactive
+    severity: P1
+    condition: pii_scrubbed_count == 0 AND request_count > 10
+    type: cause-based
+    owner: security-owner
+    runbook: docs/alerts.md#2-high-error-rate
+    note: "PII scrubber có thể bị tắt — kiểm tra logging_config.py"
+
+  # ── Traffic Alerts ───────────────────────────────────────────
+  - name: exam_rush_spike
+    severity: P3
+    condition: request_count > 3x_baseline for 10m
+    type: symptom-based
+    owner: team-oncall
+    runbook: docs/alerts.md#1-high-latency-p95
+    note: "Mùa thi — cần scale up server trước khi latency tăng"
