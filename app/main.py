@@ -26,7 +26,8 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# CORS — allow dashboard HTML to poll the API
+# CORS — allow dashboard HTML to poll the API-123
+# _________________________________
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
