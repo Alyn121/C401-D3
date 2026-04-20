@@ -1,3 +1,10 @@
-{"question":"What is your refund policy?","must_include":["7 days","proof of purchase"]}
-{"question":"Explain why metrics traces and logs work together","must_include":["metrics","traces","logs"]}
-{"question":"What should not appear in app logs?","must_include":["PII","sensitive"]}
+{"question": "Sự phát triển của AI", "must_include": ["thay đổi", "thế giới"]}
+{"question": "cách giải hệ phương trình tích phân", "must_include": ["tích phân", "giải"]}
+{"question": "Chấm điểm giúp em bài luận này", "must_include": ["điểm", "đánh giá"]}
+{"question": "Chính sách phúc khảo", "must_include": ["7 ngày", "phúc khảo"]}
+{"question": "ý nghĩa của việc sử dụng các chỉ số metrics, traces và logs", "must_include": ["metrics", "traces", "logs"]}
+{"question": "thủ tục gia hạn học bổng", "must_include": ["học bổng", "gia hạn"]}
+{"question": "tương lai của nhân loại trong kỷ nguyên AI", "must_include": ["nhân loại", "AI"]}
+{"question": "cách nấu món Phở Bò", "must_include": ["phở", "nấu"]}
+{"question": "thiết lập cảnh báo cho Latency P95", "must_include": ["alert", "latency"]}
+{"question": "asdfghjkl", "must_include": ["xin lỗi", "không"]}

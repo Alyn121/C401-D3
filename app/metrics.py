@@ -49,4 +49,10 @@ def snapshot() -> dict:
         "tokens_out_total": sum(REQUEST_TOKENS_OUT),
         "error_breakdown": dict(ERRORS),
         "quality_avg": round(mean(QUALITY_SCORES), 4) if QUALITY_SCORES else 0.0,
+        "quality_dist": {
+            "good": len([s for s in QUALITY_SCORES if s >= 0.7]),
+            "fair": len([s for s in QUALITY_SCORES if 0.4 <= s < 0.7]),
+            "poor": len([s for s in QUALITY_SCORES if s < 0.4]),
+        },
+        "pass_rate": round(len([s for s in QUALITY_SCORES if s >= 0.7]) / TRAFFIC * 100, 2) if TRAFFIC > 0 else 0.0,
     }

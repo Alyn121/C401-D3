@@ -77,4 +77,9 @@ class LabAgent:
             score += 0.1
         if "[REDACTED" in answer:
             score -= 0.2
+            
+        # Chaos Mode: Random quality drop (15% chance)
+        if random.random() < 0.15:
+            score -= random.uniform(0.3, 0.6)
+            
         return round(max(0.0, min(1.0, score)), 2)

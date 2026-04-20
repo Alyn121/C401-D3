@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EdTech Agent - Observability Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --accent-color: #38bdf8;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --success: #22c55e;
+            --error: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 15px;
+        }
+
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pulse {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .card-title {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .card-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+
+        .chart-container {
+            grid-column: span 2;
+            height: 300px;
+        }
+
+        .logs-container {
+            grid-column: span 4;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px;
+            color: var(--text-dim);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .lvl-info { color: var(--accent-color); }
+        .lvl-error { color: var(--error); font-weight: bold; }
+        .lvl-warning { color: var(--warning); }
+
+        .tag {
+            font-family: monospace;
+            background: rgba(255,255,255,0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>EdTech Agent <span style="font-weight: 200; color: var(--text-dim);">Observability</span></h1>
+            <div id="status" class="status-badge">
+                <div class="pulse"></div> LIVE
+            </div>
+        </header>
+
+        <!-- Metrics Grid -->
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">Traffic</div>
+                <div id="metric-traffic" class="card-value">0</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Pass Rate</div>
+                <div id="metric-pass" class="card-value">0%</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Total Cost</div>
+                <div id="metric-cost" class="card-value">$0.00</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Tokens In/Out</div>
+                <div id="metric-tokens" class="card-value">0 / 0</div>
+            </div>
+
+            <!-- Charts -->
+            <div class="card chart-container">
+                <div class="card-title">Latency (ms) - P50 & P95</div>
+                <canvas id="latencyChart"></canvas>
+            </div>
+            <div class="card chart-container">
+                <div class="card-title">Grading Quality Distribution</div>
+                <canvas id="qualityChart"></canvas>
+            </div>
+            <div class="card chart-container">
+                <div class="card-title">Error Breakdown</div>
+                <canvas id="errorChart"></canvas>
+            </div>
+
+            <!-- Logs -->
+            <div class="card logs-container">
+                <div class="card-title">Live Logs (Last 20)</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Level</th>
+                            <th>Event</th>
+                            <th>Correlation ID</th>
+                            <th>Feature</th>
+                        </tr>
+                    </thead>
+                    <tbody id="log-body">
+                        <!-- Logs will appear here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "http://127.0.0.1:8000";
+        
+        // Charts Initialization
+        const latencyCtx = document.getElementById('latencyChart').getContext('2d');
+        const latencyChart = new Chart(latencyCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    { label: 'P50', data: [], borderColor: '#38bdf8', tension: 0.4 },
+                    { label: 'P95', data: [], borderColor: '#f59e0b', tension: 0.4 }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+        });
+
+        const errorCtx = document.getElementById('errorChart').getContext('2d');
+        const errorChart = new Chart(errorCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [],
+                datasets: [{ data: [], backgroundColor: ['#ef4444', '#f59e0b', '#38bdf8'] }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        const qualityCtx = document.getElementById('qualityChart').getContext('2d');
+        const qualityChart = new Chart(qualityCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Good (>=0.7)', 'Fair (0.4-0.7)', 'Poor (<0.4)'],
+                datasets: [{
+                    label: 'Submissions',
+                    data: [0, 0, 0],
+                    backgroundColor: ['#22c55e', '#f59e0b', '#ef4444']
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+        });
+
+        async function updateDashboard() {
+            try {
+                // Fetch Metrics
+                const mRes = await fetch(`${API_BASE}/metrics`);
+                const metrics = await mRes.json();
+                
+                document.getElementById('metric-traffic').innerText = metrics.traffic;
+                document.getElementById('metric-pass').innerText = `${metrics.pass_rate}%`;
+                document.getElementById('metric-cost').innerText = `$${metrics.total_cost_usd.toFixed(4)}`;
+                document.getElementById('metric-tokens').innerText = `${metrics.tokens_in_total} / ${metrics.tokens_out_total}`;
+
+                // Update Quality Chart
+                qualityChart.data.datasets[0].data = [
+                    metrics.quality_dist.good,
+                    metrics.quality_dist.fair,
+                    metrics.quality_dist.poor
+                ];
+                qualityChart.update();
+
+                // Update Latency Chart
+                const now = new Date().toLocaleTimeString();
+                latencyChart.data.labels.push(now);
+                latencyChart.data.datasets[0].data.push(metrics.latency_p50);
+                latencyChart.data.datasets[1].data.push(metrics.latency_p95);
+                if (latencyChart.data.labels.length > 10) {
+                    latencyChart.data.labels.shift();
+                    latencyChart.data.datasets[0].data.shift();
+                    latencyChart.data.datasets[1].data.shift();
+                }
+                latencyChart.update();
+
+                // Update Error Chart
+                const errorKeys = Object.keys(metrics.error_breakdown);
+                errorChart.data.labels = errorKeys.length ? errorKeys : ['No Errors'];
+                errorChart.data.datasets[0].data = errorKeys.length ? Object.values(metrics.error_breakdown) : [1];
+                errorChart.update();
+
+                // Fetch Logs
+                const lRes = await fetch(`${API_BASE}/api/logs`);
+                const logs = await lRes.json();
+                const tbody = document.getElementById('log-body');
+                tbody.innerHTML = logs.reverse().map(log => `
+                    <tr>
+                        <td style="color: var(--text-dim); font-size: 0.8rem">${log.ts.split('T')[1].split('.')[0]}</td>
+                        <td class="lvl-${log.level.toLowerCase()}">${log.level}</td>
+                        <td>${log.event}</td>
+                        <td class="tag">${log.correlation_id}</td>
+                        <td>${log.feature || '-'}</td>
+                    </tr>
+                `).join('');
+
+            } catch (err) {
+                console.error("Dashboard Sync Error:", err);
+            }
+        }
+
+        setInterval(updateDashboard, 2000);
+        updateDashboard();
+    </script>
+</body>
+</html>

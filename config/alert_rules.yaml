@@ -17,3 +17,15 @@ alerts:
     type: symptom-based
     owner: finops-owner
     runbook: docs/alerts.md#3-cost-budget-spike
+  - name: low_grading_quality
+    severity: P3
+    condition: quality_avg < 0.7 for 10m
+    type: symptom-based
+    owner: content-team
+    runbook: docs/alerts.md#4-low-grading-quality
+  - name: vector_store_fail
+    severity: P1
+    condition: error_type == "RuntimeError" for 1m
+    type: incident-based
+    owner: dev-ops
+    runbook: docs/alerts.md#5-vector-store-fail

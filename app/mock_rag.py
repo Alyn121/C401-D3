@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+from .tracing import observe
 
 from .incidents import STATE
 
@@ -11,7 +12,12 @@ CORPUS = {
 }
 
 
+@observe(as_type="span")
 def retrieve(message: str) -> list[str]:
+    # Chaos Mode: Vector Store Failure (10% chance)
+    if random.random() < 0.10:
+        raise RuntimeError("VectorStore: Connection refused (Chaos Mode)")
+
     if STATE["tool_fail"]:
         raise RuntimeError("Vector store timeout")
     if STATE["rag_slow"]:
