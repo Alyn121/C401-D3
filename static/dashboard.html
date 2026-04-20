@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Gia Sư — Observability Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg:        #0a0d14;
+      --bg2:       #111520;
+      --bg3:       #171c2e;
+      --border:    rgba(255,255,255,0.07);
+      --accent:    #6366f1;
+      --accent2:   #8b5cf6;
+      --green:     #22c55e;
+      --yellow:    #f59e0b;
+      --red:       #ef4444;
+      --blue:      #3b82f6;
+      --cyan:      #06b6d4;
+      --text:      #e2e8f0;
+      --text-dim:  #64748b;
+      --text-mid:  #94a3b8;
+      --glass:     rgba(255,255,255,0.03);
+      --glow:      0 0 40px rgba(99,102,241,0.15);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Background grid ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    /* ── Header ── */
+    header {
+      position: relative; z-index: 10;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 32px;
+      background: rgba(10,13,20,0.9);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+    }
+    .logo {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .logo-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 0 20px rgba(99,102,241,0.4);
+    }
+    .logo-text { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+    .logo-sub  { font-size: 11px; color: var(--text-dim); margin-top: 1px; }
+
+    .header-right {
+      display: flex; align-items: center; gap: 16px;
+    }
+    .refresh-badge {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 12px; border-radius: 20px;
+      background: rgba(34,197,94,0.1);
+      border: 1px solid rgba(34,197,94,0.2);
+      font-size: 12px; color: var(--green);
+    }
+    .pulse {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.5; transform: scale(0.8); }
+    }
+    .time-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px; color: var(--text-dim);
+    }
+
+    /* ── Main layout ── */
+    main {
+      position: relative; z-index: 1;
+      padding: 24px 32px;
+      max-width: 1600px; margin: 0 auto;
+    }
+
+    /* ── Section title ── */
+    .section-label {
+      font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--text-dim);
+      margin-bottom: 16px; margin-top: 28px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-label::after {
+      content: ''; flex: 1; height: 1px;
+      background: var(--border);
+    }
+
+    /* ── KPI cards ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 16px;
+    }
+    @media (max-width: 1200px) { .kpi-grid { grid-template-columns: repeat(3,1fr); } }
+    @media (max-width: 700px)  { .kpi-grid { grid-template-columns: repeat(2,1fr); } }
+
+    .kpi-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      position: relative; overflow: hidden;
+      transition: border-color .2s, transform .2s;
+    }
+    .kpi-card:hover { border-color: rgba(99,102,241,0.3); transform: translateY(-2px); }
+    .kpi-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 2px;
+    }
+    .kpi-card.indigo::before  { background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+    .kpi-card.green::before   { background: var(--green); }
+    .kpi-card.yellow::before  { background: var(--yellow); }
+    .kpi-card.red::before     { background: var(--red); }
+    .kpi-card.blue::before    { background: var(--blue); }
+    .kpi-card.cyan::before    { background: var(--cyan); }
+
+    .kpi-icon { font-size: 20px; margin-bottom: 12px; }
+    .kpi-label { font-size: 11px; color: var(--text-dim); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+    .kpi-value {
+      font-size: 28px; font-weight: 700; margin: 4px 0;
+      font-family: 'JetBrains Mono', monospace; letter-spacing: -1px;
+    }
+    .kpi-unit  { font-size: 12px; color: var(--text-dim); }
+    .kpi-trend { font-size: 11px; margin-top: 8px; }
+    .kpi-trend.good { color: var(--green); }
+    .kpi-trend.warn { color: var(--yellow); }
+    .kpi-trend.bad  { color: var(--red); }
+
+    /* ── Chart panels ── */
+    .chart-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    @media (max-width: 1100px) { .chart-grid { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 700px)  { .chart-grid { grid-template-columns: 1fr; } }
+
+    .chart-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      transition: border-color .2s;
+    }
+    .chart-panel:hover { border-color: rgba(99,102,241,0.25); }
+    .chart-panel.wide  { grid-column: span 2; }
+
+    .panel-header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 16px;
+    }
+    .panel-title { font-size: 13px; font-weight: 600; }
+    .panel-sub   { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+    .slo-badge {
+      font-size: 10px; padding: 3px 8px; border-radius: 20px;
+      font-weight: 600; font-family: 'JetBrains Mono', monospace;
+    }
+    .slo-ok   { background: rgba(34,197,94,0.1);  color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+    .slo-warn { background: rgba(245,158,11,0.1); color: var(--yellow); border: 1px solid rgba(245,158,11,0.2); }
+    .slo-fail { background: rgba(239,68,68,0.1);  color: var(--red);   border: 1px solid rgba(239,68,68,0.2); }
+
+    .chart-wrap { position: relative; height: 180px; }
+
+    /* ── Incident panel ── */
+    .incident-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+    }
+    .incident-grid {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 12px;
+      margin-top: 12px;
+    }
+    .incident-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .incident-card:hover { border-color: rgba(99,102,241,0.35); }
+    .incident-card.active {
+      border-color: var(--red);
+      background: rgba(239,68,68,0.07);
+      box-shadow: 0 0 20px rgba(239,68,68,0.1);
+    }
+    .inc-name { font-size: 12px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+    .inc-desc { font-size: 11px; color: var(--text-dim); margin: 6px 0; line-height: 1.5; }
+    .inc-toggle {
+      display: flex; gap: 6px; margin-top: 10px;
+    }
+    .btn {
+      padding: 6px 12px; border-radius: 8px; border: none;
+      font-size: 11px; font-weight: 600; cursor: pointer;
+      transition: all .15s; font-family: 'Inter', sans-serif;
+    }
+    .btn-enable  { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+    .btn-enable:hover  { background: rgba(239,68,68,0.25); }
+    .btn-disable { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+    .btn-disable:hover { background: rgba(34,197,94,0.2); }
+
+    /* ── Alert panel ── */
+    .alert-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+    .alert-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px;
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 10px; font-size: 12px;
+      transition: border-color .2s;
+    }
+    .alert-item.ok   { border-left: 3px solid var(--green); }
+    .alert-item.warn { border-left: 3px solid var(--yellow); }
+    .alert-item.fire { border-left: 3px solid var(--red); animation: flash 1.5s infinite; }
+    @keyframes flash { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }
+    .alert-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .dot-ok   { background: var(--green); }
+    .dot-warn { background: var(--yellow); }
+    .dot-fire { background: var(--red); box-shadow: 0 0 6px var(--red); }
+    .alert-name { font-weight: 600; flex: 1; }
+    .alert-sev  { font-size: 10px; padding: 2px 6px; border-radius: 6px; font-weight: 600; }
+    .sev-P1 { background: rgba(239,68,68,0.15); color: var(--red); }
+    .sev-P2 { background: rgba(245,158,11,0.15); color: var(--yellow); }
+    .sev-P3 { background: rgba(99,102,241,0.15); color: var(--accent); }
+    .alert-val { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-dim); }
+
+    /* ── Log live feed ── */
+    .log-feed {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      height: 220px; overflow-y: auto;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      line-height: 1.7;
+    }
+    .log-feed::-webkit-scrollbar { width: 4px; }
+    .log-feed::-webkit-scrollbar-track { background: transparent; }
+    .log-feed::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    .log-line { padding: 1px 0; }
+    .log-line span.ts  { color: var(--text-dim); }
+    .log-line span.lvl-info  { color: var(--cyan); }
+    .log-line span.lvl-warning { color: var(--yellow); }
+    .log-line span.lvl-error  { color: var(--red); }
+    .log-line span.evt { color: var(--accent); }
+    .log-line span.svc { color: var(--green); }
+
+    /* ── Bottom bar ── */
+    .bottom-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    }
+    @media (max-width: 900px) { .bottom-grid { grid-template-columns: 1fr; } }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 999;
+      padding: 12px 20px; border-radius: 12px;
+      background: var(--bg2); border: 1px solid var(--border);
+      font-size: 13px; font-weight: 500;
+      opacity: 0; transform: translateY(10px);
+      transition: all .3s; pointer-events: none;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.success { border-color: var(--green); color: var(--green); }
+    #toast.error   { border-color: var(--red);   color: var(--red); }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🎓</div>
+    <div>
+      <div class="logo-text">AI Gia Sư — Observability</div>
+      <div class="logo-sub">Day 13 Lab · Real-time Monitoring Dashboard</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="refresh-badge">
+      <div class="pulse"></div>
+      Tự động cập nhật mỗi 10s
+    </div>
+    <div class="time-display" id="clock">--:--:--</div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ── KPI Strip ── -->
+  <div class="section-label">📊 Tổng quan hệ thống</div>
+  <div class="kpi-grid">
+    <div class="kpi-card indigo">
+      <div class="kpi-icon">⚡</div>
+      <div class="kpi-label">Latency P95</div>
+      <div class="kpi-value" id="kpi-lat95">—</div>
+      <div class="kpi-unit">milliseconds</div>
+      <div class="kpi-trend" id="trend-lat95">SLO: &lt; 3000ms</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-icon">📡</div>
+      <div class="kpi-label">Tổng requests</div>
+      <div class="kpi-value" id="kpi-traffic">—</div>
+      <div class="kpi-unit">requests</div>
+      <div class="kpi-trend good" id="trend-traffic">Đang nhận request</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-icon">🚨</div>
+      <div class="kpi-label">Error Rate</div>
+      <div class="kpi-value" id="kpi-err">—</div>
+      <div class="kpi-unit">% lỗi</div>
+      <div class="kpi-trend" id="trend-err">SLO: &lt; 2%</div>
+    </div>
+    <div class="kpi-card yellow">
+      <div class="kpi-icon">💰</div>
+      <div class="kpi-label">Tổng chi phí</div>
+      <div class="kpi-value" id="kpi-cost">—</div>
+      <div class="kpi-unit">USD</div>
+      <div class="kpi-trend" id="trend-cost">SLO: &lt; $2.5/day</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-icon">🔤</div>
+      <div class="kpi-label">Tokens (In/Out)</div>
+      <div class="kpi-value" id="kpi-tokens">—</div>
+      <div class="kpi-unit">tokens</div>
+      <div class="kpi-trend" id="trend-tokens">Tổng token dùng</div>
+    </div>
+    <div class="kpi-card cyan">
+      <div class="kpi-icon">⭐</div>
+      <div class="kpi-label">Quality Score</div>
+      <div class="kpi-value" id="kpi-quality">—</div>
+      <div class="kpi-unit">/ 1.0</div>
+      <div class="kpi-trend" id="trend-quality">SLO: &gt; 0.75</div>
+    </div>
+  </div>
+
+  <!-- ── 6 Chart Panels ── -->
+  <div class="section-label">📈 Dashboard 6 Panels</div>
+  <div class="chart-grid">
+
+    <!-- Panel 1: Latency -->
+    <div class="chart-panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">⚡ Latency P50 / P95 / P99</div>
+          <div class="panel-sub">Thời gian phản hồi theo phân vị</div>
+        </div>
+        <div class="slo-badge slo-ok" id="slo-latency">SLO ✓</div>
+      </div>
+      <div class="chart-wrap"><canvas id="chartLatency"></canvas></div>
+    </div>
+
+    <!-- Panel 2: Traffic -->
+    <div class="chart-panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">📡 Traffic — Request History</div>
+          <div class="panel-sub">Lịch sử tổng số requests</div>
+        </div>
+        <div class="slo-badge slo-ok">LIVE</div>
+      </div>
+      <div class="chart-wrap"><canvas id="chartTraffic"></canvas></div>
+    </div>
+
+    <!-- Panel 3: Error Rate -->
+    <div class="chart-panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">🚨 Error Rate & Breakdown</div>
+          <div class="panel-sub">Tỷ lệ lỗi và loại lỗi</div>
+        </div>
+        <div class="slo-badge slo-ok" id="slo-error">SLO ✓</div>
+      </div>
+      <div class="chart-wrap"><canvas id="chartError"></canvas></div>
+    </div>
+
+    <!-- Panel 4: Cost -->
+    <div class="chart-panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">💰 Cost Over Time</div>
+          <div class="panel-sub">Chi phí theo thời gian (USD)</div>
+        </div>
+        <div class="slo-badge slo-ok" id="slo-cost">SLO ✓</div>
+      </div>
+      <div class="chart-wrap"><canvas id="chartCost"></canvas></div>
+    </div>
+
+    <!-- Panel 5: Tokens -->
+    <div class="chart-panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">🔤 Tokens In / Out</div>
+          <div class="panel-sub">Lượng token tiêu thụ</div>
+        </div>
+        <div class="slo-badge slo-ok">METRICS</div>
+      </div>
+      <div class="chart-wrap"><canvas id="chartTokens"></canvas></div>
+    </div>
+
+    <!-- Panel 6: Quality -->
+    <div class="chart-panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">⭐ Quality Score</div>
+          <div class="panel-sub">Chất lượng câu trả lời (heuristic)</div>
+        </div>
+        <div class="slo-badge slo-ok" id="slo-quality">SLO ✓</div>
+      </div>
+      <div class="chart-wrap"><canvas id="chartQuality"></canvas></div>
+    </div>
+
+  </div>
+
+  <!-- ── Bottom: Incidents + Alerts ── -->
+  <div class="section-label">🔥 Incident Control & Alerts</div>
+  <div class="bottom-grid">
+
+    <!-- Incident Panel -->
+    <div class="incident-panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">💥 Inject Incidents</div>
+          <div class="panel-sub">Kích hoạt sự cố để test hệ thống</div>
+        </div>
+      </div>
+      <div class="incident-grid">
+        <div class="incident-card" id="inc-rag_slow">
+          <div class="inc-name">rag_slow</div>
+          <div class="inc-desc">Làm chậm RAG retrieval +2.5s — test latency alert</div>
+          <div class="inc-toggle">
+            <button class="btn btn-enable" onclick="triggerIncident('rag_slow','enable')">▶ Enable</button>
+            <button class="btn btn-disable" onclick="triggerIncident('rag_slow','disable')">■ Disable</button>
+          </div>
+        </div>
+        <div class="incident-card" id="inc-tool_fail">
+          <div class="inc-name">tool_fail</div>
+          <div class="inc-desc">Làm hỏng Knowledge Base — test error rate alert</div>
+          <div class="inc-toggle">
+            <button class="btn btn-enable" onclick="triggerIncident('tool_fail','enable')">▶ Enable</button>
+            <button class="btn btn-disable" onclick="triggerIncident('tool_fail','disable')">■ Disable</button>
+          </div>
+        </div>
+        <div class="incident-card" id="inc-cost_spike">
+          <div class="inc-name">cost_spike</div>
+          <div class="inc-desc">Nhân token output x4 — test cost budget alert</div>
+          <div class="inc-toggle">
+            <button class="btn btn-enable" onclick="triggerIncident('cost_spike','enable')">▶ Enable</button>
+            <button class="btn btn-disable" onclick="triggerIncident('cost_spike','disable')">■ Disable</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alert Rules Panel -->
+    <div class="incident-panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">🔔 Alert Rules — Live Status</div>
+          <div class="panel-sub">Theo config/alert_rules.yaml</div>
+        </div>
+      </div>
+      <div class="alert-list" id="alert-list">
+        <div class="alert-item ok">
+          <div class="alert-dot dot-ok"></div>
+          <div class="alert-name">high_latency_p95</div>
+          <div class="alert-sev sev-P2">P2</div>
+          <div class="alert-val" id="alert-val-latency">—ms</div>
+        </div>
+        <div class="alert-item ok" id="alert-error">
+          <div class="alert-dot dot-ok" id="alert-dot-error"></div>
+          <div class="alert-name">high_error_rate</div>
+          <div class="alert-sev sev-P1">P1</div>
+          <div class="alert-val" id="alert-val-error">—%</div>
+        </div>
+        <div class="alert-item ok" id="alert-cost">
+          <div class="alert-dot dot-ok" id="alert-dot-cost"></div>
+          <div class="alert-name">cost_budget_spike</div>
+          <div class="alert-sev sev-P2">P2</div>
+          <div class="alert-val" id="alert-val-cost">$—</div>
+        </div>
+        <div class="alert-item ok" id="alert-quality">
+          <div class="alert-dot dot-ok" id="alert-dot-quality"></div>
+          <div class="alert-name">low_answer_quality</div>
+          <div class="alert-sev sev-P3">P3</div>
+          <div class="alert-val" id="alert-val-quality">avg —</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Log Feed ── -->
+  <div class="section-label">📜 Live Log Feed</div>
+  <div class="chart-panel" style="margin-bottom: 32px;">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">Structured JSON Log Stream — data/logs.jsonl</div>
+        <div class="panel-sub">Simulated log events (gửi request để thấy log thật)</div>
+      </div>
+      <button class="btn btn-disable" onclick="clearLogs()">🗑 Xóa</button>
+    </div>
+    <div class="log-feed" id="log-feed"></div>
+  </div>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+const API = 'http://127.0.0.1:8000';
+
+// ── Chart defaults ─────────────────────────────────────────────
+Chart.defaults.color = '#64748b';
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.font.size = 11;
+
+const GRID = { color: 'rgba(255,255,255,0.04)', drawBorder: false };
+const TICK = { color: '#475569' };
+
+function mkChart(id, type, labels, datasets, extras = {}) {
+  const ctx = document.getElementById(id).getContext('2d');
+  return new Chart(ctx, {
+    type,
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: { duration: 400 },
+      plugins: { legend: { display: datasets.length > 1, labels: { boxWidth: 10, padding: 12 } }, tooltip: { mode: 'index', intersect: false } },
+      scales: {
+        x: { grid: GRID, ticks: { ...TICK, maxTicksLimit: 8 } },
+        y: { grid: GRID, ticks: TICK, beginAtZero: true, ...extras },
+      },
+      ...extras.chartOptions,
+    },
+  });
+}
+
+// ── Init charts ────────────────────────────────────────────────
+const emptyLabels = Array(20).fill('');
+
+const chartLatency = mkChart('chartLatency', 'line', [...emptyLabels], [
+  { label: 'P50', data: Array(20).fill(null), borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.08)', tension: 0.4, fill: true, pointRadius: 2 },
+  { label: 'P95', data: Array(20).fill(null), borderColor: '#6366f1', backgroundColor: 'rgba(99,102,241,0.08)', tension: 0.4, fill: true, pointRadius: 2 },
+  { label: 'P99', data: Array(20).fill(null), borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.05)', tension: 0.4, fill: true, pointRadius: 2 },
+], { suggestedMax: 5000 });
+
+const chartTraffic = mkChart('chartTraffic', 'bar', [...emptyLabels], [
+  { label: 'Requests', data: Array(20).fill(null), backgroundColor: 'rgba(99,102,241,0.5)', borderColor: '#6366f1', borderWidth: 1, borderRadius: 4 },
+]);
+
+const chartError = mkChart('chartError', 'line', [...emptyLabels], [
+  { label: 'Error %', data: Array(20).fill(null), borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)', tension: 0.4, fill: true, pointRadius: 2 },
+], { suggestedMax: 10 });
+
+const chartCost = mkChart('chartCost', 'line', [...emptyLabels], [
+  { label: 'Cost (USD)', data: Array(20).fill(null), borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', tension: 0.4, fill: true, pointRadius: 2 },
+]);
+
+const chartTokens = mkChart('chartTokens', 'bar', [...emptyLabels], [
+  { label: 'Tokens In',  data: Array(20).fill(null), backgroundColor: 'rgba(59,130,246,0.6)', borderRadius: 3 },
+  { label: 'Tokens Out', data: Array(20).fill(null), backgroundColor: 'rgba(6,182,212,0.5)', borderRadius: 3 },
+]);
+
+const chartQuality = mkChart('chartQuality', 'line', [...emptyLabels], [
+  { label: 'Quality Avg', data: Array(20).fill(null), borderColor: '#06b6d4', backgroundColor: 'rgba(6,182,212,0.1)', tension: 0.4, fill: true, pointRadius: 2 },
+], { suggestedMin: 0, suggestedMax: 1 });
+
+// ── Push data to chart (rolling window) ───────────────────────
+function pushChart(chart, label, ...values) {
+  const maxLen = 20;
+  if (chart.data.labels.length >= maxLen) chart.data.labels.shift();
+  chart.data.labels.push(label);
+  chart.data.datasets.forEach((ds, i) => {
+    if (ds.data.length >= maxLen) ds.data.shift();
+    ds.data.push(values[i] ?? null);
+  });
+  chart.update('none');
+}
+
+// ── SLO thresholds ─────────────────────────────────────────────
+const SLO = { latency_p95: 3000, error_rate: 2, cost: 2.5, quality: 0.75 };
+
+function sloClass(val, threshold, invert = false) {
+  if (val === null || val === undefined) return 'slo-ok';
+  const bad = invert ? val < threshold : val > threshold;
+  return bad ? 'slo-fail' : 'slo-ok';
+}
+
+// ── Fetch & update ─────────────────────────────────────────────
+async function fetchMetrics() {
+  try {
+    const r = await fetch(`${API}/metrics`);
+    if (!r.ok) return;
+    const d = await r.json();
+
+    const ts = new Date().toLocaleTimeString('vi-VN');
+
+    // KPI cards
+    setText('kpi-lat95',  d.latency_p95 !== undefined ? Math.round(d.latency_p95) : 0);
+    setText('kpi-traffic', d.traffic ?? 0);
+    setText('kpi-err',    (d.error_rate_pct ?? 0).toFixed(1));
+    setText('kpi-cost',   '$' + (d.total_cost_usd ?? 0).toFixed(5));
+    setText('kpi-tokens', `${fmtNum(d.tokens_in_total ?? 0)} / ${fmtNum(d.tokens_out_total ?? 0)}`);
+    setText('kpi-quality', (d.quality_avg ?? 0).toFixed(2));
+
+    // Trend badges
+    const lat95 = d.latency_p95 ?? 0;
+    setTrend('trend-lat95', lat95, 3000, false, 'ms', 'SLO: < 3000ms');
+    setTrend('trend-err',   d.error_rate_pct ?? 0, 2, false, '%', 'SLO: < 2%');
+    setTrend('trend-cost',  d.total_cost_usd ?? 0, 2.5, false, 'USD', 'SLO: < $2.5');
+    setTrend('trend-quality', d.quality_avg ?? 0, 0.75, true, '', 'SLO: > 0.75');
+
+    // Push to charts
+    pushChart(chartLatency, ts, d.latency_p50, d.latency_p95, d.latency_p99);
+    pushChart(chartTraffic, ts, d.traffic);
+    pushChart(chartError,   ts, d.error_rate_pct ?? 0);
+    pushChart(chartCost,    ts, d.total_cost_usd ?? 0);
+    pushChart(chartTokens,  ts, d.tokens_in_total ?? 0, d.tokens_out_total ?? 0);
+    pushChart(chartQuality, ts, d.quality_avg ?? 0);
+
+    // SLO badges
+    setSLO('slo-latency', lat95, 3000);
+    setSLO('slo-error',   d.error_rate_pct ?? 0, 2);
+    setSLO('slo-cost',    d.total_cost_usd ?? 0, 2.5);
+    setSLO('slo-quality', d.quality_avg ?? 0, 0.75, true);
+
+    // Alert status
+    updateAlert('alert-val-latency', 'alert-dot-error', document.querySelectorAll('.alert-item')[0], `${Math.round(lat95)}ms`, lat95 > 3000);
+    updateAlert('alert-val-error',   'alert-dot-error',  document.getElementById('alert-error'), `${(d.error_rate_pct??0).toFixed(1)}%`, (d.error_rate_pct??0) > 2);
+    updateAlert('alert-val-cost',    'alert-dot-cost',   document.getElementById('alert-cost'),  `$${(d.total_cost_usd??0).toFixed(4)}`, (d.total_cost_usd??0) > 2.5);
+    updateAlert('alert-val-quality', 'alert-dot-quality',document.getElementById('alert-quality'), `avg ${(d.quality_avg??0).toFixed(2)}`, (d.quality_avg??0) < 0.75);
+
+    // Simulated log
+    addLog('info', ts, 'api', 'metrics_polled', `latency_p95=${Math.round(lat95)}ms traffic=${d.traffic}`);
+
+  } catch (e) {
+    addLog('error', new Date().toLocaleTimeString('vi-VN'), 'dashboard', 'api_unreachable', 'Cannot connect to http://127.0.0.1:8000');
+  }
+}
+
+async function fetchIncidents() {
+  try {
+    const r = await fetch(`${API}/health`);
+    if (!r.ok) return;
+    const d = await r.json();
+    const incs = d.incidents ?? {};
+    Object.entries(incs).forEach(([name, active]) => {
+      const card = document.getElementById(`inc-${name}`);
+      if (card) card.classList.toggle('active', active);
+    });
+  } catch (_) {}
+}
+
+// ── Helpers ────────────────────────────────────────────────────
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+function fmtNum(n) {
+  if (n >= 1000000) return (n/1000000).toFixed(1)+'M';
+  if (n >= 1000) return (n/1000).toFixed(1)+'K';
+  return n;
+}
+
+function setTrend(id, val, threshold, invert, unit, fallback) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const bad = invert ? val < threshold : val > threshold;
+  el.className = 'kpi-trend ' + (bad ? 'bad' : 'good');
+  el.textContent = bad ? `⚠ ${val.toFixed ? val.toFixed(2) : val}${unit} — SLO breached!` : `✓ ${fallback}`;
+}
+
+function setSLO(id, val, threshold, invert = false) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const bad = invert ? val < threshold : val > threshold;
+  el.className = 'slo-badge ' + (bad ? 'slo-fail' : 'slo-ok');
+  el.textContent = bad ? 'SLO ✗' : 'SLO ✓';
+}
+
+function updateAlert(valId, dotId, itemEl, valText, isFiring) {
+  setText(valId, valText);
+  const dot = document.getElementById(dotId);
+  if (dot) { dot.className = 'alert-dot ' + (isFiring ? 'dot-fire' : 'dot-ok'); }
+  if (itemEl) { itemEl.className = 'alert-item ' + (isFiring ? 'fire' : 'ok'); }
+}
+
+async function triggerIncident(name, action) {
+  try {
+    const r = await fetch(`${API}/incidents/${name}/${action}`, { method: 'POST' });
+    const d = await r.json();
+    showToast(`${name} → ${action}`, 'success');
+    addLog('warning', new Date().toLocaleTimeString('vi-VN'), 'control', `incident_${action}d`, `name=${name}`);
+    fetchIncidents();
+  } catch(e) {
+    showToast('Không thể kết nối API', 'error');
+  }
+}
+
+// ── Log feed ───────────────────────────────────────────────────
+const LOG_EVENTS = [
+  { level:'info',    svc:'api',      evt:'request_received',  detail:'feature=solve_exercise subject=math' },
+  { level:'info',    svc:'rag',      evt:'retrieval_step',     detail:'doc_count=4 latency_ms=210' },
+  { level:'info',    svc:'llm',      evt:'inference_step',     detail:'tokens_in=850 tokens_out=240 cost=0.000089' },
+  { level:'info',    svc:'api',      evt:'response_sent',      detail:'quality_score=0.90 latency_ms=1310' },
+  { level:'warning', svc:'security', evt:'pii_scrubbed',       detail:'field=message patterns=[phone_vn]' },
+  { level:'error',   svc:'api',      evt:'request_failed',     detail:'error_type=RuntimeError' },
+];
+let _logIdx = 0;
+
+function addLog(level, ts, svc, evt, detail) {
+  const feed = document.getElementById('log-feed');
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.innerHTML = `<span class="ts">${ts}</span> <span class="lvl-${level}">[${level.toUpperCase()}]</span> <span class="svc">${svc}</span> → <span class="evt">${evt}</span> <span style="color:#475569">${detail}</span>`;
+  feed.appendChild(line);
+  feed.scrollTop = feed.scrollHeight;
+  if (feed.children.length > 200) feed.removeChild(feed.firstChild);
+}
+
+function clearLogs() {
+  document.getElementById('log-feed').innerHTML = '';
+}
+
+function simulateLog() {
+  const e = LOG_EVENTS[_logIdx % LOG_EVENTS.length]; _logIdx++;
+  addLog(e.level, new Date().toLocaleTimeString('vi-VN'), e.svc, e.evt, e.detail);
+}
+
+// ── Clock ──────────────────────────────────────────────────────
+function updateClock() {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('vi-VN');
+}
+
+// ── Boot ───────────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `show ${type}`;
+  setTimeout(() => { t.className = ''; }, 3000);
+}
+
+addLog('info', new Date().toLocaleTimeString('vi-VN'), 'dashboard', 'app_started', 'Connecting to http://127.0.0.1:8000');
+
+fetchMetrics();
+fetchIncidents();
+
+setInterval(fetchMetrics,   10000);
+setInterval(fetchIncidents,  5000);
+setInterval(simulateLog,     4000);
+setInterval(updateClock,     1000);
+updateClock();
+</script>
+</body>
+</html>
