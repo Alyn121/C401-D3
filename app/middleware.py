@@ -11,6 +11,7 @@ from structlog.contextvars import bind_contextvars, clear_contextvars
 class CorrelationIdMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # Clear contextvars to avoid leakage between requests
+        #__________________________________
         clear_contextvars()
 
         # Extract x-request-id from headers or generate a new one
