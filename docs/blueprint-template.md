@@ -88,7 +88,8 @@ d87814361e1cfaf7bedf575725f87a85c42ebd59  4064e5649b55d26f5cf38ecabe81cc0522a077
 - [EVIDENCE_LINK]: `9e397006e0e7b37f208e3cfd41417e84105291e2 `
 
 ### [Nguyễn Bá Khánh_2A202600135]
-- [TASKS_COMPLETED]:  Load Test & Dashboard , frontend 
+- [TASKS_COMPLETED]:  Load Test & Dashboard , frontend
+- Từ phần mọi người đã code backend: đã load dữ liệu mock để test, và sử dụng Skill.md để code giao diện html cho dashboard
 - [EVIDENCE_LINK]: 4a44127d15497ebc9840a831d34e99443a705db3 7bf23832a64a252dfb34fb7721abdf9789496d31 cc3b6e7c2e1f6a25ddcda3f03ce29a99bf66338c
 
 ### [Lưu Thị Ngọc Quỳnh_2A202600122, Nguyễn Quang Minh_2A202600195]
