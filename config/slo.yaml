@@ -1,16 +1,25 @@
-service: day13-observability-lab
+service: ai-gia-su-observability-lab
+domain: ai_tutor
 window: 28d
 slis:
   latency_p95_ms:
-    objective: 3000
+    objective: 3000          # 3 giây — học sinh không nên chờ quá lâu
     target: 99.5
-    note: Replace with your group's target
+    note: Bao gồm cả RAG và LLM inference
   error_rate_pct:
-    objective: 2
+    objective: 2             # <2% lỗi
     target: 99.0
   daily_cost_usd:
-    objective: 2.5
+    objective: 2.5           # <$2.5/ngày (Gemini Flash rẻ hơn Claude)
     target: 100.0
   quality_score_avg:
-    objective: 0.75
+    objective: 0.75          # trung bình >0.75 — câu trả lời hữu ích
     target: 95.0
+  rag_latency_p95_ms:
+    objective: 500           # RAG riêng phải < 500ms
+    target: 99.0
+    note: Dành riêng cho curriculum_retriever
+  pii_leak_rate_pct:
+    objective: 0             # Không được phép rò rỉ PII học sinh
+    target: 100.0
+    note: Bao gồm tên, email, SĐT, MSSV
