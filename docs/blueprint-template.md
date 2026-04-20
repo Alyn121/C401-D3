@@ -42,16 +42,16 @@ Potential PII leaks detected: 0
 - [TRACE_WATERFALL_EXPLANATION]: (Briefly explain one interesting span in your trace)
 
 ### 3.2 Dashboard & SLOs
-- [DASHBOARD_6_PANELS_SCREENSHOT]: [Path to image]
+- [DASHBOARD_6_PANELS_SCREENSHOT]: ![alt text](image-3.png)
 - [SLO_TABLE]:
 | SLI | Target | Window | Current Value |
-|---|---:|---|---:|
+|---|---|---|---|
 | Latency P95 | ~160ms | 28d | ~158ms |
 | Error Rate | < 2% | 28d | ~7.5% (Breached) |
 | Cost Budget | < $2.5/day | 1d | ~$0.30 |
 
 ### 3.3 Alerts & Runbook
-- [ALERT_RULES_SCREENSHOT]: [Path to image]
+- [ALERT_RULES_SCREENSHOT]: ![alt text](image-5.png)
 - [SAMPLE_RUNBOOK_LINK]: [docs/alerts.md#L...]
 
 ---
@@ -66,25 +66,25 @@ Potential PII leaks detected: 0
 
 ## 5. Individual Contributions & Evidence
 
-### [MEMBER_A_NAME]
-- [TASKS_COMPLETED]: 
-- [EVIDENCE_LINK]: (Link to specific commit or PR)
+### [Nguyễn Quốc Khánh_2A202600200, Lý Quốc An _2A202600123]
+- [TASKS_COMPLETED]: Logging & PII
+- [EVIDENCE_LINK]: 627619ed8271d37c3048400fd7b918af09b097ec `a2a8a219cf27a7d5bcd26f5732a5ca64cad6a9d5`
+d87814361e1cfaf7bedf575725f87a85c42ebd59  4064e5649b55d26f5cf38ecabe81cc0522a0779b
+### [Lưu Quang Lực_2A202600121, Đinh Văn Thư_2A202600035]
+- [TASKS_COMPLETED]: Tracing & Enrichment
+- [EVIDENCE_LINK]:  16aa1fb65665610084641de02a83180f8bc810dd   d42a29b84ef5357f6826dbddae1a2341d59754e7
+47643b4becd787cc850875486b541c4866f28ebb
+###  Nguyễn Phương Nam _ 2A202600194]
+- [TASKS_COMPLETED]: SLO & Alerts
+- [EVIDENCE_LINK]: 9e397006e0e7b37f208e3cfd41417e84105291e2
 
-### [MEMBER_B_NAME]
-- [TASKS_COMPLETED]: 
-- [EVIDENCE_LINK]: 
+### [Nguyễn Bá Khánh_2A202600135]
+- [TASKS_COMPLETED]:  Load Test & Dashboard , frontend 
+- [EVIDENCE_LINK]: 4a44127d15497ebc9840a831d34e99443a705db3 7bf23832a64a252dfb34fb7721abdf9789496d31 cc3b6e7c2e1f6a25ddcda3f03ce29a99bf66338c
 
-### [MEMBER_C_NAME]
-- [TASKS_COMPLETED]: 
-- [EVIDENCE_LINK]: 
-
-### [MEMBER_D_NAME]
-- [TASKS_COMPLETED]: 
-- [EVIDENCE_LINK]: 
-
-### [MEMBER_E_NAME]
-- [TASKS_COMPLETED]: 
-- [EVIDENCE_LINK]: 
+### [Lưu Thị Ngọc Quỳnh_2A202600122, Nguyễn Quang Minh_2A202600195]
+- [TASKS_COMPLETED]: Demo and report 
+- [EVIDENCE_LINK]: c4c1347a8bdfb884eafb6f2e251c1876f50cef91 70bd6976dadaccfe2c8c7a0676c30bd3d2c10f1e
 
 ---
 
@@ -92,3 +92,6 @@ Potential PII leaks detected: 0
 - [BONUS_COST_OPTIMIZATION]: (Description + Evidence)
 - [BONUS_AUDIT_LOGS]: (Description + Evidence)
 - [BONUS_CUSTOM_METRIC]: (Description + Evidence)
+
+
+# 11111111111111111
