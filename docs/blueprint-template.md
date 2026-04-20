@@ -70,6 +70,15 @@ Potential PII leaks detected: 0
 - [TASKS_COMPLETED]: Logging & PII
 - [EVIDENCE_LINK]: 627619ed8271d37c3048400fd7b918af09b097ec `a2a8a219cf27a7d5bcd26f5732a5ca64cad6a9d5`
 d87814361e1cfaf7bedf575725f87a85c42ebd59  4064e5649b55d26f5cf38ecabe81cc0522a0779b
+### [ Lý Quốc An _2A202600123]
+- [TASKS_COMPLETED]:
+  - Triển khai `CorrelationIdMiddleware` hỗ trợ định danh request xuyên suốt các layer, tích hợp Rate Limiting và Payload Guard.
+  - Thiết kế bộ quy tắc cảnh báo trong `alert_rules.yaml` dựa trên ngưỡng SLO cho Latency P95, Error Rate và LLM Token Cost.
+  - Định nghĩa và chuẩn hóa `logging_schema.json` giúp đồng bộ dữ liệu log giữa Backend và Dashboard.
+  - Thiết kế schema cho log PII và log audit.
+  - thiết kế input JSON
+ - [EVIDENCE_LINK]: 627619ed8271d37c3048400fd7b918af09b097ec , a2a8a219cf27a7d5bcd26f5732a5ca64cad6a9d5 , 7cd858d2d279ed435dbdece1d80b8a7a2836234d , 0fbd933c4d898ef3531d7be8896ff3803ac4aac3
+   eebde5086df6c279a230addbc90f10640b2f95b7
 ### [Lưu Quang Lực_2A202600121, Đinh Văn Thư_2A202600035]
 - [TASKS_COMPLETED]: Tracing & Enrichment
 - [EVIDENCE_LINK]:  16aa1fb65665610084641de02a83180f8bc810dd   d42a29b84ef5357f6826dbddae1a2341d59754e7
